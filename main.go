@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"embed"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -47,14 +48,23 @@ func main() {
 				Name:    "use-tls",
 				Aliases: []string{"tls"},
 				Usage:   "Use TLS for the connection to the alert manager",
-				Value:   false,
+			},
+			&cli.StringMapFlag{
+				Name:    "labels",
+				Aliases: []string{"l"},
+				Usage:   "Labels to attach to the alert in the format key=value. Can be specified multiple times.",
+			},
+			&cli.BoolFlag{
+				Name:    "verbose",
+				Aliases: []string{"v"},
+				Usage:   "Enable verbose output",
 			},
 		},
 		Action: func(ctx context.Context, command *cli.Command) error {
 			startTime := time.Now().UTC()
 			endTime := startTime.Add(command.Duration("alert-duration"))
 
-			body, err := prepareBody(startTime, endTime)
+			body, err := prepareBody(command.StringMap("labels"), startTime, endTime)
 			if err != nil {
 				return err
 			}
@@ -91,6 +101,10 @@ func main() {
 				return cli.Exit("Failed to create alert: "+resp.Status+" "+string(responseBody), 1)
 			}
 
+			if command.Bool("verbose") {
+				fmt.Printf("alert created with body: %s\n", body)
+			}
+
 			return nil
 		},
 	}
@@ -108,12 +122,13 @@ func prepareAlertManagerURL(address string, useTLS bool) string {
 	return "http://" + address + "/api/v2/alerts"
 }
 
-func prepareBody(startTime, endTime time.Time) (string, error) {
+func prepareBody(labels map[string]string, startTime, endTime time.Time) (string, error) {
 	tpl, err := template.New(templateFileName).ParseFS(alertTemplate, templateFileName)
 	if err != nil {
 		return "", err
 	}
 	params := TemplateParams{
+		Labels:    labels,
 		StartDate: startTime.Format(dateFormat),
 		EndDate:   endTime.Format(dateFormat),
 	}
@@ -128,6 +143,7 @@ func prepareBody(startTime, endTime time.Time) (string, error) {
 }
 
 type TemplateParams struct {
+	Labels    map[string]string
 	StartDate string
 	EndDate   string
 }

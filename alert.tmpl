@@ -5,6 +5,9 @@
         "severity": "critical",
         "namespace": "test-namespace",
         "job": "test-job",
+        {{- range $key, $value := .Labels }}
+        "{{ $key }}": "{{ $value }}",
+        {{- end }}
         "instance": "test-instance"
     },
     "annotations": {
