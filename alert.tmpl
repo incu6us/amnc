@@ -1,0 +1,17 @@
+[
+    {
+    "labels": {
+        "alertname": "TEST",
+        "severity": "critical",
+        "namespace": "test-namespace",
+        "job": "test-job",
+        "instance": "test-instance"
+    },
+    "annotations": {
+        "summary": "summary of the alert",
+        "description": "Test alert"
+    },
+    "startsAt": "{{ .StartDate }}",
+    "endsAt": "{{ .EndDate }}"
+    }
+]
