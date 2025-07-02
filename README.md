@@ -1,7 +1,7 @@
 amnc
 ---
 
-# Usage
+### Usage
 ```bash
 NAME:
    create-alert - Create test alert for Alert Manager
